@@ -117,6 +117,13 @@ async def fetch_pr_details(pr_number: int) -> dict:
             "files": file_map,
         }
 
+@app.get("/")
+def root():
+    return {
+        "project": "ArmorGit",
+        "status": "running"
+    }
+
 @app.get("/api/pull-requests")
 async def get_pull_requests():
     """Return a JSON list of open PRs."""
