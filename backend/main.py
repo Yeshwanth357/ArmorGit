@@ -48,13 +48,13 @@ _last_prs = None
 review_lock = asyncio.Lock()
 
 async def fetch_open_prs() -> list:
-    """Fetch open pull requests from the configured GitHub repository."""
+    """Fetch all pull requests from the configured GitHub repository."""
     token = os.getenv("GITHUB_TOKEN")
     owner = os.getenv("GITHUB_OWNER")
     repo = os.getenv("GITHUB_REPO")
     if not all([token, owner, repo]):
         return []
-    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=open"
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=all"
     async with httpx.AsyncClient() as client:
         resp = await client.get(url, headers={"Authorization": f"token {token}"})
         if resp.status_code != 200:
