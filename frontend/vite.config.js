@@ -8,7 +8,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'https://armorgit-backend.onrender.com',
+        target: 'https://armorgit-1.onrender.com',
         changeOrigin: true,
         secure: false,
       }
