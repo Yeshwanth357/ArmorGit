@@ -38,12 +38,12 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
     setSseStatus('polling');
     const tick = async () => {
       try {
-        const res = await fetch('/api/pull-requests');
+        const res = await fetch('https://armorgit-1.onrender.com/api/pull-requests');
         if (res.ok) {
           const data = await res.json();
           setPrs(data);
         }
-      } catch (_) {}
+      } catch (_) { }
     };
     tick();
     pollTimerRef.current = setInterval(tick, 15_000);
@@ -115,8 +115,8 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
   /* ─── Render ─────────────────────────────────────────────────────── */
   const statusBadge = {
     connecting: { label: 'Connecting…', color: 'text-amber-400', icon: <RefreshCw className="h-3 w-3 animate-spin" /> },
-    live:       { label: 'Live',        color: 'text-emerald-400', icon: <Wifi className="h-3 w-3" /> },
-    polling:    { label: 'Polling',     color: 'text-sky-400',     icon: <RefreshCw className="h-3 w-3" /> },
+    live: { label: 'Live', color: 'text-emerald-400', icon: <Wifi className="h-3 w-3" /> },
+    polling: { label: 'Polling', color: 'text-sky-400', icon: <RefreshCw className="h-3 w-3" /> },
   }[sseStatus];
 
   return (
@@ -157,11 +157,10 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
             return (
               <li
                 key={pr.number}
-                className={`flex items-center justify-between p-2 rounded transition-all border ${
-                  isActive
+                className={`flex items-center justify-between p-2 rounded transition-all border ${isActive
                     ? 'bg-sky-500/10 border-sky-500/40 text-sky-300'
                     : 'bg-slate-900/40 border-slate-800/60 text-slate-200 hover:border-slate-700'
-                }`}
+                  }`}
               >
                 <div className="flex flex-col gap-0.5 overflow-hidden mr-2">
                   <span className="font-semibold text-xs truncate max-w-[190px]" title={pr.title}>
@@ -173,11 +172,10 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
                 <button
                   onClick={() => onSelectPR(pr.number)}
                   disabled={isActive}
-                  className={`shrink-0 px-2.5 py-1 rounded text-xxs font-mono font-bold tracking-wider transition-all border ${
-                    isActive
+                  className={`shrink-0 px-2.5 py-1 rounded text-xxs font-mono font-bold tracking-wider transition-all border ${isActive
                       ? 'bg-sky-500/20 border-sky-400/50 text-sky-300 cursor-default'
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 cursor-pointer'
-                  }`}
+                    }`}
                 >
                   {isActive ? 'SELECTED' : 'SELECT'}
                 </button>
