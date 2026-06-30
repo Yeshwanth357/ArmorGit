@@ -56,7 +56,7 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
       esRef.current = null;
     }
 
-    const es = new EventSource('/api/pull-requests/stream');
+    const es = new EventSource('https://armorgit-1.onrender.com/api/pull-requests/stream');
     esRef.current = es;
 
     es.onopen = () => {
@@ -158,8 +158,8 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
               <li
                 key={pr.number}
                 className={`flex items-center justify-between p-2 rounded transition-all border ${isActive
-                    ? 'bg-sky-500/10 border-sky-500/40 text-sky-300'
-                    : 'bg-slate-900/40 border-slate-800/60 text-slate-200 hover:border-slate-700'
+                  ? 'bg-sky-500/10 border-sky-500/40 text-sky-300'
+                  : 'bg-slate-900/40 border-slate-800/60 text-slate-200 hover:border-slate-700'
                   }`}
               >
                 <div className="flex flex-col gap-0.5 overflow-hidden mr-2">
@@ -173,8 +173,8 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
                   onClick={() => onSelectPR(pr.number)}
                   disabled={isActive}
                   className={`shrink-0 px-2.5 py-1 rounded text-xxs font-mono font-bold tracking-wider transition-all border ${isActive
-                      ? 'bg-sky-500/20 border-sky-400/50 text-sky-300 cursor-default'
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 cursor-pointer'
+                    ? 'bg-sky-500/20 border-sky-400/50 text-sky-300 cursor-default'
+                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 cursor-pointer'
                     }`}
                 >
                   {isActive ? 'SELECTED' : 'SELECT'}

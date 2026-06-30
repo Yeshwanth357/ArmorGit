@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Shield, 
-  ShieldAlert, 
-  ShieldCheck, 
-  Terminal, 
-  FileCode, 
-  Play, 
-  AlertTriangle, 
-  RefreshCw, 
-  CheckCircle2, 
-  Lock, 
-  Unlock, 
+import {
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  Terminal,
+  FileCode,
+  Play,
+  AlertTriangle,
+  RefreshCw,
+  CheckCircle2,
+  Lock,
+  Unlock,
   Server,
   User,
   KeyRound,
@@ -38,7 +38,7 @@ export default function App() {
   const [activeToken, setActiveToken] = useState(null);
   const [shieldState, setShieldState] = useState('IDLE'); // 'IDLE', 'VERIFYING', 'SAFE', 'BLOCKED'
   const [verdict, setVerdict] = useState(null); // 'APPROVED', 'REJECTED_VIOLATION', 'MERGED_VULNERABLE'
-  
+
   // File viewers
   const [viewingFile, setViewingFile] = useState('');
 
@@ -73,7 +73,7 @@ export default function App() {
   // Fetch API Key Config Status
   const fetchKeyStatus = async () => {
     try {
-      const res = await fetch('/api/verify-keys');
+      const res = await fetch('https://armorgit-1.onrender.com/api/verify-keys');
       const data = await res.json();
       setApiKeysStatus(data);
       // Auto-set recommended mode if valid key present
@@ -155,7 +155,7 @@ export default function App() {
             setIsRunning(false);
             clearInterval(statusPollRef.current);
           }
-        } catch (_) {}
+        } catch (_) { }
       }, 2000);
     } else {
       clearInterval(statusPollRef.current);
@@ -170,7 +170,7 @@ export default function App() {
       alert("Please select a pull request to review.");
       return;
     }
-    
+
     setIsRunning(true);
     setLogs([]);
     setVerdict(null);
@@ -203,7 +203,7 @@ export default function App() {
 
   const activePRFiles = prFiles;
   const fileKeys = Object.keys(activePRFiles);
-  
+
   // Make sure viewingFile is in active keys list
   useEffect(() => {
     if (!fileKeys.includes(viewingFile)) {
@@ -213,7 +213,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans select-none">
-      
+
       {/* --- PREMIUM GLOWING HEADER --- */}
       <header className="glass-panel border-b border-slate-800/80 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
@@ -232,20 +232,18 @@ export default function App() {
         <div className="flex items-center gap-4 text-xs font-mono">
           {/* Environment variables config warnings */}
           <div className="flex gap-2">
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${
-              apiKeysStatus.armoriq_configured 
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${apiKeysStatus.armoriq_configured
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                 : 'bg-amber-500/5 border-amber-500/20 text-amber-500/80'
-            }`}>
+              }`}>
               <KeyRound className="h-3 w-3" />
               <span>ArmorIQ Key: {apiKeysStatus.armoriq_configured ? 'LOADED' : 'MISSING'}</span>
             </div>
-            
-            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${
-              apiKeysStatus.gemini_configured 
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${apiKeysStatus.gemini_configured
+                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                 : 'bg-amber-500/5 border-amber-500/20 text-amber-500/80'
-            }`}>
+              }`}>
               <KeyRound className="h-3 w-3" />
               <span>Gemini Key: {apiKeysStatus.gemini_configured ? 'LOADED' : 'MISSING'}</span>
             </div>
@@ -262,14 +260,14 @@ export default function App() {
 
       {/* --- DASHBOARD WRAPPER --- */}
       <main className="flex-1 p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 overflow-y-auto">
-        
+
         {/* --- LEFT SIDEBAR: CONTROL & PR VIEWER (4/12 cols) --- */}
         <section className="lg:col-span-5 flex flex-col gap-6">
-          
+
           {/* Configuration & Trigger Block */}
           <div className="glass-panel rounded-xl p-5 flex flex-col gap-4 relative overflow-hidden">
             <div className="absolute top-0 right-0 h-40 w-40 bg-sky-500/5 rounded-full blur-2xl pointer-events-none"></div>
-            
+
             <h2 className="text-sm font-semibold tracking-wide text-slate-300 uppercase flex items-center gap-2">
               <Play className="h-4 w-4 text-sky-400" /> PR Review Controls
             </h2>
@@ -305,25 +303,23 @@ export default function App() {
                 <span className="text-[10px] text-slate-500">Choose real APIs or sandbox emulation.</span>
               </div>
               <div className="flex bg-slate-950 border border-slate-800 rounded-md p-1">
-                <button 
+                <button
                   onClick={() => !isRunning && setMode('sandbox')}
                   disabled={isRunning}
-                  className={`px-3 py-1.5 rounded text-xxs font-mono uppercase font-bold tracking-wider transition-all ${
-                    mode === 'sandbox' 
-                      ? 'bg-sky-500/25 border border-sky-500/40 text-sky-400 shadow' 
+                  className={`px-3 py-1.5 rounded text-xxs font-mono uppercase font-bold tracking-wider transition-all ${mode === 'sandbox'
+                      ? 'bg-sky-500/25 border border-sky-500/40 text-sky-400 shadow'
                       : 'text-slate-500 hover:text-slate-300'
-                  } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   Sandbox
                 </button>
-                <button 
+                <button
                   onClick={() => !isRunning && setMode('production')}
                   disabled={isRunning || !apiKeysStatus.gemini_configured || !apiKeysStatus.armoriq_configured}
-                  className={`px-3 py-1.5 rounded text-xxs font-mono uppercase font-bold tracking-wider transition-all flex items-center gap-1 ${
-                    mode === 'production' 
-                      ? 'bg-indigo-500/25 border border-indigo-500/40 text-indigo-400 shadow' 
+                  className={`px-3 py-1.5 rounded text-xxs font-mono uppercase font-bold tracking-wider transition-all flex items-center gap-1 ${mode === 'production'
+                      ? 'bg-indigo-500/25 border border-indigo-500/40 text-indigo-400 shadow'
                       : 'text-slate-500 hover:text-slate-400'
-                  } ${isRunning || !apiKeysStatus.gemini_configured || !apiKeysStatus.armoriq_configured ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                    } ${isRunning || !apiKeysStatus.gemini_configured || !apiKeysStatus.armoriq_configured ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   title={(!apiKeysStatus.gemini_configured || !apiKeysStatus.armoriq_configured) ? "Add API Keys to env to enable Production mode" : ""}
                 >
                   {(!apiKeysStatus.gemini_configured || !apiKeysStatus.armoriq_configured) && <Lock className="h-2.5 w-2.5" />}
@@ -333,14 +329,13 @@ export default function App() {
             </div>
 
             {/* Launch simulation */}
-            <button 
+            <button
               onClick={handleTriggerReview}
               disabled={isRunning || !selectedPrNumber}
-              className={`w-full py-3 rounded-lg font-semibold tracking-wide text-sm flex items-center justify-center gap-2 border transition-all ${
-                isRunning || !selectedPrNumber
-                  ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed' 
+              className={`w-full py-3 rounded-lg font-semibold tracking-wide text-sm flex items-center justify-center gap-2 border transition-all ${isRunning || !selectedPrNumber
+                  ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
                   : 'bg-sky-500 border-sky-400 text-slate-950 font-bold hover:bg-sky-400 shadow-lg shadow-sky-500/10 cursor-pointer'
-              }`}
+                }`}
             >
               {isRunning ? (
                 <>
@@ -374,11 +369,10 @@ export default function App() {
                 <button
                   key={f}
                   onClick={() => setViewingFile(f)}
-                  className={`px-3 py-1.5 rounded transition-all flex items-center gap-1 border ${
-                    viewingFile === f 
-                      ? 'bg-slate-800 border-slate-700 text-slate-100' 
+                  className={`px-3 py-1.5 rounded transition-all flex items-center gap-1 border ${viewingFile === f
+                      ? 'bg-slate-800 border-slate-700 text-slate-100'
                       : 'bg-transparent border-transparent text-slate-500 hover:text-slate-300'
-                  }`}
+                    }`}
                 >
                   <FileCode className="h-3 w-3" />
                   {f}
@@ -388,7 +382,7 @@ export default function App() {
 
             {/* Code Content Container */}
             <div className="flex-1 p-4 font-mono text-xs leading-relaxed overflow-y-auto max-h-[350px] relative select-text selection:bg-sky-500/30">
-              
+
               {viewingFile && activePRFiles[viewingFile] ? (
                 <pre className="text-slate-300 bg-slate-900/60 border border-slate-900 rounded p-3 h-full overflow-x-auto whitespace-pre">
                   {activePRFiles[viewingFile]}
@@ -412,36 +406,33 @@ export default function App() {
         <section className="lg:col-span-7 flex flex-col gap-6">
 
           {/* ArmorIQ Boundary Shield Monitor Banner */}
-          <div className={`rounded-xl border p-4.5 transition-all duration-300 flex items-center justify-between relative overflow-hidden ${
-            shieldState === 'IDLE' 
-              ? 'bg-slate-900/80 border-slate-800/80 text-slate-400' 
+          <div className={`rounded-xl border p-4.5 transition-all duration-300 flex items-center justify-between relative overflow-hidden ${shieldState === 'IDLE'
+              ? 'bg-slate-900/80 border-slate-800/80 text-slate-400'
               : shieldState === 'VERIFYING'
-              ? 'bg-sky-950/20 border-sky-500/40 text-sky-300 shadow-md shadow-sky-950/20'
-              : shieldState === 'SAFE'
-              ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300 shadow-md shadow-emerald-950/20 animate-pulse'
-              : 'bg-rose-950/20 border-rose-500/50 text-rose-300 shadow-lg shadow-rose-950/20'
-          }`}>
-            
+                ? 'bg-sky-950/20 border-sky-500/40 text-sky-300 shadow-md shadow-sky-950/20'
+                : shieldState === 'SAFE'
+                  ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300 shadow-md shadow-emerald-950/20 animate-pulse'
+                  : 'bg-rose-950/20 border-rose-500/50 text-rose-300 shadow-lg shadow-rose-950/20'
+            }`}>
+
             <div className="flex items-center gap-4.5 relative z-10">
-              <div className={`p-3 rounded-full border relative ${
-                shieldState === 'IDLE' 
-                  ? 'bg-slate-900 border-slate-700 text-slate-500' 
+              <div className={`p-3 rounded-full border relative ${shieldState === 'IDLE'
+                  ? 'bg-slate-900 border-slate-700 text-slate-500'
                   : shieldState === 'VERIFYING'
-                  ? 'bg-sky-900/40 border-sky-400/50 text-sky-400 animate-spin'
-                  : shieldState === 'SAFE'
-                  ? 'bg-emerald-900/40 border-emerald-400/50 text-emerald-400'
-                  : 'bg-rose-900/40 border-rose-400/60 text-rose-400'
-              }`}>
+                    ? 'bg-sky-900/40 border-sky-400/50 text-sky-400 animate-spin'
+                    : shieldState === 'SAFE'
+                      ? 'bg-emerald-900/40 border-emerald-400/50 text-emerald-400'
+                      : 'bg-rose-900/40 border-rose-400/60 text-rose-400'
+                }`}>
                 {shieldState === 'IDLE' && <Shield className="h-6 w-6" />}
                 {shieldState === 'VERIFYING' && <RefreshCw className="h-6 w-6" />}
                 {shieldState === 'SAFE' && <ShieldCheck className="h-6 w-6" />}
                 {shieldState === 'BLOCKED' && <ShieldAlert className="h-6 w-6" />}
-                
+
                 {/* Glowing backdrop blur */}
                 {shieldState !== 'IDLE' && (
-                  <span className={`absolute inset-0 rounded-full blur ${
-                    shieldState === 'VERIFYING' ? 'bg-sky-500/20' : shieldState === 'SAFE' ? 'bg-emerald-500/20' : 'bg-rose-500/30'
-                  }`}></span>
+                  <span className={`absolute inset-0 rounded-full blur ${shieldState === 'VERIFYING' ? 'bg-sky-500/20' : shieldState === 'SAFE' ? 'bg-emerald-500/20' : 'bg-rose-500/30'
+                    }`}></span>
                 )}
               </div>
 
@@ -467,7 +458,7 @@ export default function App() {
                 </span>
               </div>
             )}
-            
+
             {/* Background scanline simulation for blocked state */}
             {shieldState === 'BLOCKED' && (
               <div className="absolute inset-0 bg-red-950/5 pointer-events-none scanline animate-pulse-slow"></div>
@@ -480,7 +471,7 @@ export default function App() {
               <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Terminal className="h-4 w-4 text-sky-400" /> Autopilot Agent logs
               </span>
-              
+
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
                 <span className="text-xxs font-mono text-emerald-400/95 uppercase font-semibold">streaming</span>
@@ -496,7 +487,7 @@ export default function App() {
                 logs.map((log, index) => {
                   let textStyle = "text-slate-300";
                   let prefix = "[INFO]";
-                  
+
                   if (log.type === 'agent') {
                     textStyle = "text-sky-300";
                     prefix = "[AGENT]";
@@ -519,7 +510,7 @@ export default function App() {
                       <span className="text-slate-500 mr-2">[{log.timestamp.slice(11, 19)}]</span>
                       <span className="text-slate-600 mr-2">{prefix}</span>
                       <span>{log.message}</span>
-                      
+
                       {/* Sub details for tool validation error */}
                       {log.type === 'armoriq_block' && log.details?.matched_policy && (
                         <div className="mt-1 ml-2 text-[10px] text-rose-300/80 bg-rose-950/20 p-2 rounded border border-rose-900/30 flex flex-col gap-1">
@@ -541,7 +532,7 @@ export default function App() {
             <h2 className="text-sm font-semibold tracking-wide text-slate-300 uppercase flex items-center gap-1.5">
               <FileCheck className="h-4.5 w-4.5 text-sky-400" /> Cryptographic Audit Trail
             </h2>
-            
+
             <div className="border border-slate-800/80 rounded-lg overflow-hidden text-xxs font-mono bg-slate-950">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -569,11 +560,10 @@ export default function App() {
                           <td className="py-2 px-3 font-semibold text-slate-100">{log.details?.tool || 'intent_capture'}</td>
                           <td className="py-2 px-3 text-slate-400">maintainer@company.com</td>
                           <td className="py-2 px-3">
-                            <span className={`px-2 py-0.5 rounded-full font-sans font-bold uppercase ${
-                              isBlock 
-                                ? 'bg-rose-500/15 border border-rose-500/35 text-rose-400' 
+                            <span className={`px-2 py-0.5 rounded-full font-sans font-bold uppercase ${isBlock
+                                ? 'bg-rose-500/15 border border-rose-500/35 text-rose-400'
                                 : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-400'
-                            }`}>
+                              }`}>
                               {isBlock ? 'BLOCK' : 'ALLOW'}
                             </span>
                           </td>
@@ -590,13 +580,12 @@ export default function App() {
 
             {/* Verdict Output Banner */}
             {verdict && (
-              <div className={`p-4 rounded-lg border text-sm flex items-center justify-between animate-pulse ${
-                verdict === 'APPROVED' 
-                  ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-300' 
+              <div className={`p-4 rounded-lg border text-sm flex items-center justify-between animate-pulse ${verdict === 'APPROVED'
+                  ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-300'
                   : verdict === 'REJECTED_VIOLATION'
-                  ? 'bg-rose-950/35 border-rose-500/50 text-rose-300'
-                  : 'bg-amber-950/25 border-amber-500/40 text-amber-300'
-              }`}>
+                    ? 'bg-rose-950/35 border-rose-500/50 text-rose-300'
+                    : 'bg-amber-950/25 border-amber-500/40 text-amber-300'
+                }`}>
                 <div className="flex items-center gap-2">
                   {verdict === 'APPROVED' && <CheckCircle2 className="h-5 w-5" />}
                   {verdict === 'REJECTED_VIOLATION' && <ShieldAlert className="h-5 w-5" />}
@@ -627,7 +616,7 @@ export default function App() {
         </section>
 
       </main>
-      
+
       {/* --- FOOTER CARD --- */}
       <footer className="glass-panel border-t border-slate-900 px-6 py-3 flex items-center justify-between text-xxs text-slate-500 font-mono">
         <span>© 2026 ArmorGit Project. Powered by Google ADK &amp; ArmorIQ Security Control Fabric.</span>
