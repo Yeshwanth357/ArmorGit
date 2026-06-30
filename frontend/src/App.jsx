@@ -21,6 +21,9 @@ import PullRequestFeed from './components/PullRequestFeed.jsx';
 import CursorGlow from './components/CursorGlow.jsx';
 
 export default function App() {
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://armorgit-1.onrender.com";
   // Config state
   const [mode, setMode] = useState('sandbox'); // 'sandbox' or 'production'
   const [isRunning, setIsRunning] = useState(false);
@@ -53,14 +56,21 @@ export default function App() {
   // Handler to load a real PR from GitHub
   const handleSelectRealPR = async (prNumber) => {
     setSelectedPrNumber(prNumber);
+
     try {
-      const res = await fetch(`/api/pull-requests/${prNumber}`);
+      const res = await fetch(
+        `${API_URL}/api/pull-requests/${prNumber}`
+      );
+
       const data = await res.json();
-      if (data.status === 'error') {
+
+      if (data.status === "error") {
         alert(data.message);
         return;
       }
+
       setPrFiles(data.files || {});
+
       if (data.files && Object.keys(data.files).length > 0) {
         setViewingFile(Object.keys(data.files)[0]);
       }
@@ -73,7 +83,7 @@ export default function App() {
   // Fetch API Key Config Status
   const fetchKeyStatus = async () => {
     try {
-      const res = await fetch('https://armorgit-1.onrender.com/api/verify-keys');
+      const res = await fetch(`${API_URL}/api/verify-keys`);
       const data = await res.json();
       setApiKeysStatus(data);
       // Auto-set recommended mode if valid key present
@@ -95,7 +105,9 @@ export default function App() {
       eventSourceRef.current.close();
     }
 
-    const es = new EventSource('/api/logs');
+    const es = new EventSource(
+      `${API_URL}/api/logs`
+    );
     eventSourceRef.current = es;
 
     es.onmessage = (event) => {
@@ -149,7 +161,9 @@ export default function App() {
     if (isRunning) {
       statusPollRef.current = setInterval(async () => {
         try {
-          const res = await fetch('/api/status');
+          const res = await fetch(
+            `${API_URL}/api/status`
+          );
           const data = await res.json();
           if (!data.running) {
             setIsRunning(false);
@@ -182,14 +196,19 @@ export default function App() {
     await new Promise(r => setTimeout(r, 300));
 
     try {
-      const response = await fetch('/api/review', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mode: mode,
-          pr_number: selectedPrNumber
-        })
-      });
+      const response = await fetch(
+        `${API_URL}/api/review`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            mode,
+            pr_number: selectedPrNumber,
+          }),
+        }
+      );
       const data = await response.json();
       if (data.status === 'error') {
         alert(data.message);
@@ -233,16 +252,16 @@ export default function App() {
           {/* Environment variables config warnings */}
           <div className="flex gap-2">
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${apiKeysStatus.armoriq_configured
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                : 'bg-amber-500/5 border-amber-500/20 text-amber-500/80'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-amber-500/5 border-amber-500/20 text-amber-500/80'
               }`}>
               <KeyRound className="h-3 w-3" />
               <span>ArmorIQ Key: {apiKeysStatus.armoriq_configured ? 'LOADED' : 'MISSING'}</span>
             </div>
 
             <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border ${apiKeysStatus.gemini_configured
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                : 'bg-amber-500/5 border-amber-500/20 text-amber-500/80'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-amber-500/5 border-amber-500/20 text-amber-500/80'
               }`}>
               <KeyRound className="h-3 w-3" />
               <span>Gemini Key: {apiKeysStatus.gemini_configured ? 'LOADED' : 'MISSING'}</span>
@@ -307,8 +326,8 @@ export default function App() {
                   onClick={() => !isRunning && setMode('sandbox')}
                   disabled={isRunning}
                   className={`px-3 py-1.5 rounded text-xxs font-mono uppercase font-bold tracking-wider transition-all ${mode === 'sandbox'
-                      ? 'bg-sky-500/25 border border-sky-500/40 text-sky-400 shadow'
-                      : 'text-slate-500 hover:text-slate-300'
+                    ? 'bg-sky-500/25 border border-sky-500/40 text-sky-400 shadow'
+                    : 'text-slate-500 hover:text-slate-300'
                     } ${isRunning ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   Sandbox
@@ -317,8 +336,8 @@ export default function App() {
                   onClick={() => !isRunning && setMode('production')}
                   disabled={isRunning || !apiKeysStatus.gemini_configured || !apiKeysStatus.armoriq_configured}
                   className={`px-3 py-1.5 rounded text-xxs font-mono uppercase font-bold tracking-wider transition-all flex items-center gap-1 ${mode === 'production'
-                      ? 'bg-indigo-500/25 border border-indigo-500/40 text-indigo-400 shadow'
-                      : 'text-slate-500 hover:text-slate-400'
+                    ? 'bg-indigo-500/25 border border-indigo-500/40 text-indigo-400 shadow'
+                    : 'text-slate-500 hover:text-slate-400'
                     } ${isRunning || !apiKeysStatus.gemini_configured || !apiKeysStatus.armoriq_configured ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                   title={(!apiKeysStatus.gemini_configured || !apiKeysStatus.armoriq_configured) ? "Add API Keys to env to enable Production mode" : ""}
                 >
@@ -333,8 +352,8 @@ export default function App() {
               onClick={handleTriggerReview}
               disabled={isRunning || !selectedPrNumber}
               className={`w-full py-3 rounded-lg font-semibold tracking-wide text-sm flex items-center justify-center gap-2 border transition-all ${isRunning || !selectedPrNumber
-                  ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
-                  : 'bg-sky-500 border-sky-400 text-slate-950 font-bold hover:bg-sky-400 shadow-lg shadow-sky-500/10 cursor-pointer'
+                ? 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-sky-500 border-sky-400 text-slate-950 font-bold hover:bg-sky-400 shadow-lg shadow-sky-500/10 cursor-pointer'
                 }`}
             >
               {isRunning ? (
@@ -370,8 +389,8 @@ export default function App() {
                   key={f}
                   onClick={() => setViewingFile(f)}
                   className={`px-3 py-1.5 rounded transition-all flex items-center gap-1 border ${viewingFile === f
-                      ? 'bg-slate-800 border-slate-700 text-slate-100'
-                      : 'bg-transparent border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'bg-slate-800 border-slate-700 text-slate-100'
+                    : 'bg-transparent border-transparent text-slate-500 hover:text-slate-300'
                     }`}
                 >
                   <FileCode className="h-3 w-3" />
@@ -407,22 +426,22 @@ export default function App() {
 
           {/* ArmorIQ Boundary Shield Monitor Banner */}
           <div className={`rounded-xl border p-4.5 transition-all duration-300 flex items-center justify-between relative overflow-hidden ${shieldState === 'IDLE'
-              ? 'bg-slate-900/80 border-slate-800/80 text-slate-400'
-              : shieldState === 'VERIFYING'
-                ? 'bg-sky-950/20 border-sky-500/40 text-sky-300 shadow-md shadow-sky-950/20'
-                : shieldState === 'SAFE'
-                  ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300 shadow-md shadow-emerald-950/20 animate-pulse'
-                  : 'bg-rose-950/20 border-rose-500/50 text-rose-300 shadow-lg shadow-rose-950/20'
+            ? 'bg-slate-900/80 border-slate-800/80 text-slate-400'
+            : shieldState === 'VERIFYING'
+              ? 'bg-sky-950/20 border-sky-500/40 text-sky-300 shadow-md shadow-sky-950/20'
+              : shieldState === 'SAFE'
+                ? 'bg-emerald-950/20 border-emerald-500/40 text-emerald-300 shadow-md shadow-emerald-950/20 animate-pulse'
+                : 'bg-rose-950/20 border-rose-500/50 text-rose-300 shadow-lg shadow-rose-950/20'
             }`}>
 
             <div className="flex items-center gap-4.5 relative z-10">
               <div className={`p-3 rounded-full border relative ${shieldState === 'IDLE'
-                  ? 'bg-slate-900 border-slate-700 text-slate-500'
-                  : shieldState === 'VERIFYING'
-                    ? 'bg-sky-900/40 border-sky-400/50 text-sky-400 animate-spin'
-                    : shieldState === 'SAFE'
-                      ? 'bg-emerald-900/40 border-emerald-400/50 text-emerald-400'
-                      : 'bg-rose-900/40 border-rose-400/60 text-rose-400'
+                ? 'bg-slate-900 border-slate-700 text-slate-500'
+                : shieldState === 'VERIFYING'
+                  ? 'bg-sky-900/40 border-sky-400/50 text-sky-400 animate-spin'
+                  : shieldState === 'SAFE'
+                    ? 'bg-emerald-900/40 border-emerald-400/50 text-emerald-400'
+                    : 'bg-rose-900/40 border-rose-400/60 text-rose-400'
                 }`}>
                 {shieldState === 'IDLE' && <Shield className="h-6 w-6" />}
                 {shieldState === 'VERIFYING' && <RefreshCw className="h-6 w-6" />}
@@ -561,8 +580,8 @@ export default function App() {
                           <td className="py-2 px-3 text-slate-400">maintainer@company.com</td>
                           <td className="py-2 px-3">
                             <span className={`px-2 py-0.5 rounded-full font-sans font-bold uppercase ${isBlock
-                                ? 'bg-rose-500/15 border border-rose-500/35 text-rose-400'
-                                : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-400'
+                              ? 'bg-rose-500/15 border border-rose-500/35 text-rose-400'
+                              : 'bg-emerald-500/15 border border-emerald-500/35 text-emerald-400'
                               }`}>
                               {isBlock ? 'BLOCK' : 'ALLOW'}
                             </span>
@@ -581,10 +600,10 @@ export default function App() {
             {/* Verdict Output Banner */}
             {verdict && (
               <div className={`p-4 rounded-lg border text-sm flex items-center justify-between animate-pulse ${verdict === 'APPROVED'
-                  ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-300'
-                  : verdict === 'REJECTED_VIOLATION'
-                    ? 'bg-rose-950/35 border-rose-500/50 text-rose-300'
-                    : 'bg-amber-950/25 border-amber-500/40 text-amber-300'
+                ? 'bg-emerald-950/25 border-emerald-500/40 text-emerald-300'
+                : verdict === 'REJECTED_VIOLATION'
+                  ? 'bg-rose-950/35 border-rose-500/50 text-rose-300'
+                  : 'bg-amber-950/25 border-amber-500/40 text-amber-300'
                 }`}>
                 <div className="flex items-center gap-2">
                   {verdict === 'APPROVED' && <CheckCircle2 className="h-5 w-5" />}

@@ -27,11 +27,18 @@ from agent import run_sandbox_agent, run_production_agent
 
 app = FastAPI(title="ArmorGit API Server")
 
-# Enable CORS for Vite frontend server
+# Enable CORS – list all frontend origins explicitly.
+# NOTE: allow_credentials=True is incompatible with allow_origins=["*"] per the
+# CORS spec, so we enumerate origins instead.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For local development
-    allow_credentials=True,
+    allow_origins=[
+        "http://localhost:5173",          # Vite dev server
+        "http://127.0.0.1:5173",
+        "https://armor-git-beryl.vercel.app",  # Vercel production
+        "https://armorgit-1.onrender.com",     # Render (self, for health checks)
+    ],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

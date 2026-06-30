@@ -1,123 +1,57 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { RefreshCw, GitPullRequest, Wifi, WifiOff } from 'lucide-react';
+import { RefreshCw, GitPullRequest, Wifi, AlertCircle } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://armorgit-1.onrender.com';
 
 /**
  * PullRequestFeed - Displays real open pull requests from the GitHub repo
- * configured via GITHUB_TOKEN / GITHUB_OWNER / GITHUB_REPO in .env.
+ * configured via GITHUB_TOKEN / GITHUB_OWNER / GITHUB_REPO in backend .env.
  *
  * Strategy:
  *  - Initial load: fetch() the REST endpoint for an instant snapshot.
- *  - Live updates:  EventSource SSE that auto-reconnects on transient errors.
- *  - Fallback:      If SSE fails 3 times, switch to polling every 15 s.
+ *  - Live updates:  Poll every 15 s for simplicity and cross-origin reliability.
  */
 const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
   const [prs, setPrs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sseStatus, setSseStatus] = useState('connecting'); // 'connecting' | 'live' | 'polling'
-  const esRef = useRef(null);
-  const failCountRef = useRef(0);
+  const [error, setError] = useState(null);
+  const [liveStatus, setLiveStatus] = useState('connecting'); // 'connecting' | 'live' | 'error'
   const pollTimerRef = useRef(null);
 
-  /* ─── Fetch snapshot ─────────────────────────────────────────────── */
-  const fetchSnapshot = useCallback(async () => {
+  /* ─── Fetch PRs ───────────────────────────────────────────────────── */
+  const fetchPRs = useCallback(async () => {
     try {
-      const res = await fetch('/api/pull-requests');
+      const res = await fetch(`${API_URL}/api/pull-requests`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setPrs(data);
+      setError(null);
+      setLiveStatus('live');
     } catch (err) {
-      console.warn('[PullRequestFeed] snapshot fetch failed:', err);
+      console.warn('[PullRequestFeed] fetch failed:', err);
+      setError(`Could not reach backend: ${err.message}`);
+      setLiveStatus('error');
     } finally {
       setLoading(false);
     }
   }, []);
 
-  /* ─── Polling fallback (used when SSE keeps failing) ────────────── */
-  const startPolling = useCallback(() => {
-    if (pollTimerRef.current) return;
-    setSseStatus('polling');
-    const tick = async () => {
-      try {
-        const res = await fetch('https://armorgit-1.onrender.com/api/pull-requests');
-        if (res.ok) {
-          const data = await res.json();
-          setPrs(data);
-        }
-      } catch (_) { }
-    };
-    tick();
-    pollTimerRef.current = setInterval(tick, 15_000);
-  }, []);
-
-  /* ─── SSE connection ─────────────────────────────────────────────── */
-  const connectSSE = useCallback(() => {
-    if (esRef.current) {
-      esRef.current.close();
-      esRef.current = null;
-    }
-
-    const es = new EventSource('https://armorgit-1.onrender.com/api/pull-requests/stream');
-    esRef.current = es;
-
-    es.onopen = () => {
-      failCountRef.current = 0;
-      setSseStatus('live');
-    };
-
-    es.onmessage = (e) => {
-      try {
-        const updated = JSON.parse(e.data);
-        if (Array.isArray(updated)) {
-          setPrs(updated);
-          setLoading(false);
-          failCountRef.current = 0;
-          setSseStatus('live');
-        }
-      } catch (parseErr) {
-        console.warn('[PullRequestFeed] SSE parse error:', parseErr);
-      }
-    };
-
-    es.onerror = () => {
-      failCountRef.current += 1;
-      console.warn(`[PullRequestFeed] SSE error #${failCountRef.current}`);
-      es.close();
-      esRef.current = null;
-
-      if (failCountRef.current >= 3) {
-        // Give up on SSE, fall back to polling
-        startPolling();
-      } else {
-        // Retry SSE after a short delay
-        setSseStatus('connecting');
-        setTimeout(connectSSE, 3_000 * failCountRef.current);
-      }
-    };
-  }, [startPolling]);
-
   /* ─── Mount / unmount ────────────────────────────────────────────── */
   useEffect(() => {
-    fetchSnapshot();
-    connectSSE();
-
+    fetchPRs();
+    pollTimerRef.current = setInterval(fetchPRs, 15_000);
     return () => {
-      if (esRef.current) {
-        esRef.current.close();
-        esRef.current = null;
-      }
-      if (pollTimerRef.current) {
-        clearInterval(pollTimerRef.current);
-        pollTimerRef.current = null;
-      }
+      clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
     };
-  }, [fetchSnapshot, connectSSE]);
+  }, [fetchPRs]);
 
-  /* ─── Render ─────────────────────────────────────────────────────── */
-  const statusBadge = {
+  /* ─── Status badge ───────────────────────────────────────────────── */
+  const badge = {
     connecting: { label: 'Connecting…', color: 'text-amber-400', icon: <RefreshCw className="h-3 w-3 animate-spin" /> },
-    live: { label: 'Live', color: 'text-emerald-400', icon: <Wifi className="h-3 w-3" /> },
-    polling: { label: 'Polling', color: 'text-sky-400', icon: <RefreshCw className="h-3 w-3" /> },
-  }[sseStatus];
+    live:       { label: 'Live',        color: 'text-emerald-400', icon: <Wifi className="h-3 w-3" /> },
+    error:      { label: 'Error',       color: 'text-rose-400',    icon: <AlertCircle className="h-3 w-3" /> },
+  }[liveStatus];
 
   return (
     <div className="glass-panel rounded-xl p-4 flex flex-col gap-3 relative overflow-hidden">
@@ -129,9 +63,9 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
           <GitPullRequest className="h-4 w-4 text-sky-400" />
           GitHub PR Feed
         </h3>
-        <div className={`flex items-center gap-1 text-[10px] font-mono ${statusBadge.color}`}>
-          {statusBadge.icon}
-          <span>{statusBadge.label}</span>
+        <div className={`flex items-center gap-1 text-[10px] font-mono ${badge.color}`}>
+          {badge.icon}
+          <span>{badge.label}</span>
           {prs.length > 0 && (
             <span className="ml-1 bg-slate-900 border border-slate-800 text-slate-400 py-0.5 px-1.5 rounded-full">
               {prs.length} open
@@ -146,6 +80,17 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
           <RefreshCw className="h-4 w-4 animate-spin text-sky-400" />
           <span className="text-xs font-mono">Loading pull requests…</span>
         </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center gap-2 text-rose-400 min-h-[80px] py-4">
+          <AlertCircle className="h-5 w-5" />
+          <span className="text-xs font-mono text-center px-2">{error}</span>
+          <button
+            onClick={fetchPRs}
+            className="mt-1 px-3 py-1 text-[10px] font-mono uppercase rounded border border-slate-700 text-slate-400 hover:text-slate-200 hover:border-slate-600 transition-all cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
       ) : prs.length === 0 ? (
         <div className="text-center py-6 text-slate-500 text-xs italic">
           No open pull requests found in the configured repository.
@@ -157,10 +102,11 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
             return (
               <li
                 key={pr.number}
-                className={`flex items-center justify-between p-2 rounded transition-all border ${isActive
-                  ? 'bg-sky-500/10 border-sky-500/40 text-sky-300'
-                  : 'bg-slate-900/40 border-slate-800/60 text-slate-200 hover:border-slate-700'
-                  }`}
+                className={`flex items-center justify-between p-2 rounded transition-all border ${
+                  isActive
+                    ? 'bg-sky-500/10 border-sky-500/40 text-sky-300'
+                    : 'bg-slate-900/40 border-slate-800/60 text-slate-200 hover:border-slate-700'
+                }`}
               >
                 <div className="flex flex-col gap-0.5 overflow-hidden mr-2">
                   <span className="font-semibold text-xs truncate max-w-[190px]" title={pr.title}>
@@ -172,10 +118,11 @@ const PullRequestFeed = ({ onSelectPR, activePrNumber }) => {
                 <button
                   onClick={() => onSelectPR(pr.number)}
                   disabled={isActive}
-                  className={`shrink-0 px-2.5 py-1 rounded text-xxs font-mono font-bold tracking-wider transition-all border ${isActive
-                    ? 'bg-sky-500/20 border-sky-400/50 text-sky-300 cursor-default'
-                    : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 cursor-pointer'
-                    }`}
+                  className={`shrink-0 px-2.5 py-1 rounded text-xxs font-mono font-bold tracking-wider transition-all border ${
+                    isActive
+                      ? 'bg-sky-500/20 border-sky-400/50 text-sky-300 cursor-default'
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 cursor-pointer'
+                  }`}
                 >
                   {isActive ? 'SELECTED' : 'SELECT'}
                 </button>
